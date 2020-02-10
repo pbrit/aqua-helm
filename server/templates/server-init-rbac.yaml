@@ -1,0 +1,68 @@
+{{- if .Values.init.enabled }}
+# Service Account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-server-init
+
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+
+# Role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-server-init
+
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+rules:
+# Can read its configuration from the ConfigMap
+- apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  resourceNames:
+  - "{{ .Release.Name }}-server-init"
+  verbs:
+  - "get"
+
+# Can watch the deployments
+- apiGroups:
+  - "apps/v1"
+  resources:
+  - "deployments"
+  verbs:
+  - "watch"
+
+# Can list the pods
+- apiGroups:
+  - ""
+  resources:
+  - "pods"
+  verbs:
+  - "list"
+
+# RoleBinding
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-server-init
+
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-server-init
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}-server-init
+{{- end }}

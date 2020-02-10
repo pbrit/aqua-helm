@@ -169,3 +169,23 @@ scanner:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+init:
+  enabled: true
+  deploymentWaitFor: "60"
+  image:
+    repository: cna0/aqua-security-conf
+    tag: "v0.1.0"
+    pullPolicy: IfNotPresent
+  # # Aqua Security Conf example
+  # config:
+  #   users:
+  #   - username: "scannerX",
+  #     password: "123password",
+  #     role: "scanner"
+  #   enforcers:
+  #   - name: "kubernetes-pool-3",
+  #     shouldEnforce: false,
+  #     token": "F67D95A6-2F53-4F2E-836F-474AB70FAFE5"
+
+

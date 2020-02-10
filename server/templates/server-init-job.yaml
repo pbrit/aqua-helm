@@ -1,0 +1,49 @@
+{{- if .Values.init.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-server-init
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccount: {{ .Release.Name }}-server-init
+      containers:
+      - image: "{{ .Values.init.image.repository }}:{{ .Values.init.image.tag }}"
+        imagePullPolicy: "{{ .Values.init.image.pullPolicy }}"
+        env:
+        - name: AQUA_GATEWAY_NAMESPACE
+          value: "{{ .Release.Namespace }}"
+        - name: AQUA_GATEWAY_DEPLOYMENT_NAME
+          value: "{{ .Release.Name }}-console"
+        - name: AQUA_GATEWAY_DEPLOYMENT_READY_DURATION
+          value: "{{ .Values.init.deploymentWaitFor }}"
+        - name: AQUA_URL
+          value: {{ printf "http://%s-console-svc:%d" .Release.Name (.Values.web.service.externalPort | int) }}
+        - name: AQUA_USERNAME
+          value: "administrator"
+        - name: AQUA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-console-secrets
+              key: admin-password
+        - name: AQUA_CONFIG_NAMESPACE
+          value: "{{ .Release.Namespace }}"
+        - name: AQUA_CONFIG_NAME
+          value: "{{ .Release.Name }}-server-init"
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "2000m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+{{- end }}
